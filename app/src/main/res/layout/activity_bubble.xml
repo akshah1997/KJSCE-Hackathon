@@ -2,7 +2,9 @@
 <com.txusballesteros.bubbles.BubbleLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
     <ImageView
         android:id="@+id/avatar"
@@ -12,5 +14,15 @@
         android:background="@drawable/profile_decorator"
         android:src="@drawable/profile"
         android:scaleType="centerCrop"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="15sp"
+        android:layout_marginTop="2dp"
+        android:layout_marginLeft="2dp"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
+        />
 
 </com.txusballesteros.bubbles.BubbleLayout>
