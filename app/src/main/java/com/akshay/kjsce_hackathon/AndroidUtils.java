@@ -1,5 +1,7 @@
 package com.akshay.kjsce_hackathon;
 
+import android.os.AsyncTask;
+import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -18,36 +20,44 @@ import java.io.InputStream;
  * Created by G3n on 06-10-2017.
  */
 
+
 public class AndroidUtils {
-    public static void main(String args[])
+    public static void wolfReq(String s)throws Exception
     {
-        wolfReq();
-    }
-    public static void wolfReq()
-    {
+
         String appid="JHG2AQ-KEUPARWGKH";
         HttpTransport httpTransport = new NetHttpTransport();
         HttpRequestFactory requestFactory =
                 httpTransport.createRequestFactory();
         GenericUrl url1 = new
                 GenericUrl("http://api.wolframalpha.com/v2/query");
-    url1.put("input","Who is the president of America");
+    url1.put("input",s);
+        url1.put("output","JSON");
         url1.put("appid",appid);
-        HttpRequest request = null;
-        try {
-            request = requestFactory.buildGetRequest(url1);
-            HttpResponse httpResponse = request.execute();
-            InputStream inputStream = httpResponse.getContent();
-            int ch;
-            String result = "";
-            while ((ch = inputStream.read()) != -1) {
-                result+=(char)ch;
+        final HttpRequest request = requestFactory.buildGetRequest(url1);
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                HttpResponse httpResponse = null;
+
+                try {
+                    httpResponse = request.execute();
+                    InputStream inputStream = httpResponse.getContent();
+                    int ch;
+                    String result = "";
+                    while ((ch = inputStream.read()) != -1) {
+                        result+=(char)ch;
+                    }
+
+                    httpResponse.disconnect();
+                    Log.d("abc",result);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                return null;
             }
-            httpResponse.disconnect();
-            Log.d("abc",result);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        }.execute();
 
     }
 }
