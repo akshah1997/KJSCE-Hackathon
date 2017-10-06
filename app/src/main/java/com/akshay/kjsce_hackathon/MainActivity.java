@@ -11,10 +11,22 @@ import android.widget.Toast;
 import com.github.bassaer.chatmessageview.models.Message;
 import com.github.bassaer.chatmessageview.models.User;
 import com.github.bassaer.chatmessageview.views.ChatView;
+import com.google.gson.JsonElement;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.Map;
+
+import ai.api.AIListener;
+import ai.api.android.AIConfiguration;
+import ai.api.android.AIService;
+import ai.api.model.Result;
+
+public class MainActivity extends AppCompatActivity implements AIListener {
 
     ChatView chatView;
+    private AIService aiService;
+    private static final String CLIENT_ACCESS_TOKEN = "7fb6a25c74834dd3afa68ad0c6146f99";
+    User me, you;
+    private boolean semaphore = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +34,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         chatView = (ChatView) findViewById(R.id.chat_view);
+        final AIConfiguration config = new AIConfiguration(CLIENT_ACCESS_TOKEN,
+                AIConfiguration.SupportedLanguages.English,
+                AIConfiguration.RecognitionEngine.System);
+
+        aiService = AIService.getService(this, config);
+        aiService.setListener(this);
 
         int myId = 0;
 //User icon
@@ -33,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
         Bitmap yourIcon = BitmapFactory.decodeResource(getResources(), R.drawable.face_1);
         String yourName = "Bot";
 
-        final User me = new User(myId, myName, myIcon);
-        final User you = new User(yourId, yourName, yourIcon);
+        me = new User(myId, myName, myIcon);
+        you = new User(yourId, yourName, yourIcon);
 
         /*chatView.setBackgroundColor(Color.BLUE);
         chatView.setEnableSwipeRefresh(true);*/
@@ -43,7 +61,13 @@ public class MainActivity extends AppCompatActivity {
         chatView.setOnClickOptionButtonListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"Tits", Toast.LENGTH_LONG).show();
+                if (semaphore == true) {
+                    aiService.startListening();
+                    semaphore = false;
+                } else {
+                    aiService.stopListening();
+                    semaphore = true;
+                }
             }
         });
 
@@ -65,10 +89,10 @@ public class MainActivity extends AppCompatActivity {
                                                   }
                                               });
         // firstTest();
-        
+
     }
 
-    void firstTest() {
+    /*void firstTest() {
         //User id
         int myId = 0;
 //User icon
@@ -124,5 +148,68 @@ public class MainActivity extends AppCompatActivity {
         chatView.receive(message3);
         message1.hideIcon(true);
         message2.hideIcon(true);
+    }*/
+
+    @Override
+    public void onResult(ai.api.model.AIResponse response) {
+        Result result = response.getResult();
+
+        // Get parameters
+        String parameterString = "";
+        if (result.getParameters() != null && !result.getParameters().isEmpty()) {
+            for (final Map.Entry<String, JsonElement> entry : result.getParameters().entrySet()) {
+                parameterString += "(" + entry.getKey() + ", " + entry.getValue() + ") ";
+            }
+        }
+
+        Message msg = new Message.Builder()
+                .setUser(me)
+                .setRightMessage(true)
+                .setMessageText(result.getResolvedQuery())
+                .hideIcon(true)
+                .build();
+        //Set to chat view
+        chatView.send(msg);
+        //Reset edit text
+        chatView.setInputText("");
+        msg.setIconVisibility(false);
+
+        Message message = new Message.Builder()
+                .setUser(you)
+                .setRightMessage(false)
+                .setMessageText("Query:" + result.getResolvedQuery() +
+                        "\nAction: " + result.getAction() +
+                        "\nParameters: " + parameterString + "\nResolvedQuery: " + result.getResolvedQuery()
+                        + "\nResult: " + result.getFulfillment().getSpeech())
+                .hideIcon(true)
+                .build();
+        //Set to chat view
+        chatView.send(message);
+        message.setIconVisibility(false);
+    }
+
+    @Override
+    public void onError(ai.api.model.AIError error) {
+        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onAudioLevel(float level) {
+
+    }
+
+    @Override
+    public void onListeningStarted() {
+
+    }
+
+    @Override
+    public void onListeningCanceled() {
+
+    }
+
+    @Override
+    public void onListeningFinished() {
+
     }
 }
