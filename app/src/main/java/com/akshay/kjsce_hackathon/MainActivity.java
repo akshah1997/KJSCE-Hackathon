@@ -1,15 +1,20 @@
 package com.akshay.kjsce_hackathon;
 
+import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.icu.text.SimpleDateFormat;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Debug;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -21,6 +26,8 @@ import com.github.bassaer.chatmessageview.models.User;
 import com.github.bassaer.chatmessageview.views.ChatView;
 import com.google.gson.JsonElement;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.Map;
 
 import ai.api.AIDataService;
@@ -41,6 +48,13 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     private static final String CLIENT_ACCESS_TOKEN = "7fb6a25c74834dd3afa68ad0c6146f99";
     User me, you;
     private boolean semaphore = true;
+
+    PendingIntent pendingIntent;
+    AlarmManager am;
+    String givenDateString = "Sat Oct 6 14:57:00 GMT+05:30 2017";
+    String to = "shubham.dalvi97@gmail.com";
+    String subject = "KJSCEHackathon";
+    String messageEmail = "Hello World";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +133,9 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
             }
         });
+        // setAlarm(givenDateString);
+        //  sendMail(to,subject,message);
+
         chatView = (ChatView) findViewById(R.id.chat_view);
         final AIConfiguration config = new AIConfiguration(CLIENT_ACCESS_TOKEN,
                 AIConfiguration.SupportedLanguages.English,
@@ -212,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                 return null;
             }
 
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             protected void onPostExecute(AIResponse response) {
                 if (response != null) {
@@ -236,14 +254,33 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                             .build();
                     //Set to chat view
                     chatView.send(message);
+                    executeCorrespondingTask(result);
                 }
             }
         }.execute(aiRequest);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    void executeCorrespondingTask(Result result) {
+        if (result.getFulfillment().getSpeech().equals("set alarm")) {
+            givenDateString = result.getFulfillment().getSpeech();
+            setAlarm(givenDateString);
+        }
+        if (result.getFulfillment().getSpeech().equals("tomail")) {
+            to = result.getFulfillment().getSpeech();
+        }
+        if (result.getFulfillment().getSpeech().equals("subjectemail")) {
+            subject = result.getFulfillment().getSpeech();
+        }
+        if (result.getFulfillment().getSpeech().equals("messageemail")) {
+            messageEmail = result.getFulfillment().getSpeech();
+            sendMail(to, subject, messageEmail);
+        }
+    }
+
     @Override
     public void onResult(ai.api.model.AIResponse response) {
-        Result result = response.getResult();
+        /*Result result = response.getResult();
 
         // Get parameters
         String parameterString = "";
@@ -276,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                 .build();
         //Set to chat view
         chatView.send(message);
-        message.setIconVisibility(false);
+        message.setIconVisibility(false);*/
     }
 
     @Override
@@ -301,6 +338,35 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
     @Override
     public void onListeningFinished() {
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public void setAlarm(String givenDateString) {
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+        Date mDate = null;
+        try {
+            mDate = sdf.parse(givenDateString);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                12345, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        am = (AlarmManager) getSystemService(Activity.ALARM_SERVICE);
+        am.set(AlarmManager.RTC_WAKEUP, mDate.getTime(),
+                pendingIntent);
+
+    }
+
+    public void sendMail(String to, String subject, String message) {
+        Intent email = new Intent(Intent.ACTION_SEND);
+        email.putExtra(Intent.EXTRA_EMAIL, to);
+        email.putExtra(Intent.EXTRA_SUBJECT, subject);
+        email.putExtra(Intent.EXTRA_TEXT, message);
+        email.setType("message/rfc822");
+        startActivity(Intent.createChooser(email, "Select Email client"));
 
     }
 
