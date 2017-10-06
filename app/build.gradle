@@ -34,7 +34,7 @@ android {
 
 
 dependencies {
-    compile files('C:/Users/G3n/AndroidStudioProjects/KJSCE-Hackathon/libs/google-api-client-1.4.1-beta.jar')
+
     compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
@@ -48,4 +48,5 @@ dependencies {
     compile 'commons-io:commons-io:2.4'
     compile 'com.txusballesteros:bubbles:1.2.1'
     testCompile 'junit:junit:4.12'
+    compile files('C:/Users/G3n/AndroidStudioProjects/KJSCE-Hackathon/libs/google-http-client-1.21.0.jar')
 }
