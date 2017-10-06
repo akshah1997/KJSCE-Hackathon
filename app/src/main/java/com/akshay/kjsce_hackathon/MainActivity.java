@@ -3,6 +3,7 @@ package com.akshay.kjsce_hackathon;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -15,15 +16,20 @@ import com.google.gson.JsonElement;
 
 import java.util.Map;
 
+import ai.api.AIDataService;
 import ai.api.AIListener;
+import ai.api.AIServiceException;
 import ai.api.android.AIConfiguration;
 import ai.api.android.AIService;
+import ai.api.model.AIRequest;
+import ai.api.model.AIResponse;
 import ai.api.model.Result;
 
 public class MainActivity extends AppCompatActivity implements AIListener {
 
     ChatView chatView;
     private AIService aiService;
+    private AIDataService aiDataService;
     private static final String CLIENT_ACCESS_TOKEN = "7fb6a25c74834dd3afa68ad0c6146f99";
     User me, you;
     private boolean semaphore = true;
@@ -40,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
         aiService = AIService.getService(this, config);
         aiService.setListener(this);
+        aiDataService = new AIDataService(config);
 
         int myId = 0;
 //User icon
@@ -83,72 +90,58 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                                                               .build();
                                                       //Set to chat view
                                                       chatView.send(message);
+
+                                                      final AIRequest aiRequest = new AIRequest();
+                                                      aiRequest.setQuery(chatView.getInputText());
+                                                      //aiService.textRequest(aiRequest);
+                                                      //final AIResponse aiResponse = aiDataService.request(aiRequest);
+
+                                                      new AsyncTask<AIRequest, Void, AIResponse>() {
+                                                          @Override
+                                                          protected AIResponse doInBackground(AIRequest... requests) {
+                                                              final AIRequest request = requests[0];
+                                                              try {
+                                                                  final AIResponse response = aiDataService.request(aiRequest);
+                                                                  return response;
+                                                              } catch (AIServiceException e) {
+                                                              }
+                                                              return null;
+                                                          }
+                                                          @Override
+                                                          protected void onPostExecute(AIResponse response) {
+                                                              if (response != null) {
+                                                                  // process aiResponse here
+                                                                  Result result = response.getResult();
+
+                                                                  // Get parameters
+                                                                  String parameterString = "";
+                                                                  if (result.getParameters() != null && !result.getParameters().isEmpty()) {
+                                                                      for (final Map.Entry<String, JsonElement> entry : result.getParameters().entrySet()) {
+                                                                          parameterString += "(" + entry.getKey() + ", " + entry.getValue() + ") ";
+                                                                      }
+                                                                  }
+                                                                  Message message = new Message.Builder()
+                                                                          .setUser(you)
+                                                                          .setRightMessage(false)
+                                                                          .setMessageText("Query:" + result.getResolvedQuery() +
+                                                                                  "\nAction: " + result.getAction() +
+                                                                                  "\nParameters: " + parameterString + "\nResolvedQuery: " + result.getResolvedQuery()
+                                                                                  + "\nResult: " + result.getFulfillment().getSpeech())
+                                                                          .hideIcon(true)
+                                                                          .build();
+                                                                  //Set to chat view
+                                                                  chatView.send(message);
+                                                              }
+                                                          }
+                                                      }.execute(aiRequest);
+
                                                       //Reset edit text
                                                       chatView.setInputText("");
-                                                      message.setIconVisibility(false);
                                                   }
                                               });
         // firstTest();
 
     }
-
-    /*void firstTest() {
-        //User id
-        int myId = 0;
-//User icon
-        Bitmap myIcon = BitmapFactory.decodeResource(getResources(), R.drawable.face_2);
-//User name
-        String myName = "Akshay";
-
-        int yourId = 1;
-        Bitmap yourIcon = BitmapFactory.decodeResource(getResources(), R.drawable.face_1);
-        String yourName = "Bot";
-
-        final User me = new User(myId, myName, myIcon);
-        final User you = new User(yourId, yourName, yourIcon);
-
-        Message message1 = new Message.Builder()
-                .setUser(me) // Sender
-                .setRightMessage(true) // This message Will be shown right side.
-                .setMessageText("Hello!")//Message contents
-                .build();
-        Message message2 = new Message.Builder()
-                .setUser(you) // Sender
-                .setRightMessage(false) // This message Will be shown left side.
-                .setMessageText("What's up?") //Message contents
-                .setPicture(yourIcon)
-                .setType(Message.Type.PICTURE)
-                .build();
-
-        Message message3 = new Message.Builder()
-                .setUser(you) // Sender
-                .setRightMessage(false) // This message Will be shown left side.
-                .setMessageText("What's up?") //Message contents
-                .setType(Message.Type.LINK)
-                .build();
-
-        chatView.setOnClickSendButtonListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //new message
-                Message message = new Message.Builder()
-                        .setUser(me)
-                        .setRightMessage(true)
-                        .setMessageText(chatView.getInputText())
-                        .hideIcon(true)
-                        .build();
-                //Set to chat view
-                chatView.send(message);
-                //Reset edit text
-                chatView.setInputText("");
-            }
-        });
-        chatView.send(message1);
-        chatView.receive(message2);
-        chatView.receive(message3);
-        message1.hideIcon(true);
-        message2.hideIcon(true);
-    }*/
 
     @Override
     public void onResult(ai.api.model.AIResponse response) {
@@ -212,4 +205,62 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     public void onListeningFinished() {
 
     }
+    /*void firstTest() {
+        //User id
+        int myId = 0;
+//User icon
+        Bitmap myIcon = BitmapFactory.decodeResource(getResources(), R.drawable.face_2);
+//User name
+        String myName = "Akshay";
+
+        int yourId = 1;
+        Bitmap yourIcon = BitmapFactory.decodeResource(getResources(), R.drawable.face_1);
+        String yourName = "Bot";
+
+        final User me = new User(myId, myName, myIcon);
+        final User you = new User(yourId, yourName, yourIcon);
+
+        Message message1 = new Message.Builder()
+                .setUser(me) // Sender
+                .setRightMessage(true) // This message Will be shown right side.
+                .setMessageText("Hello!")//Message contents
+                .build();
+        Message message2 = new Message.Builder()
+                .setUser(you) // Sender
+                .setRightMessage(false) // This message Will be shown left side.
+                .setMessageText("What's up?") //Message contents
+                .setPicture(yourIcon)
+                .setType(Message.Type.PICTURE)
+                .build();
+
+        Message message3 = new Message.Builder()
+                .setUser(you) // Sender
+                .setRightMessage(false) // This message Will be shown left side.
+                .setMessageText("What's up?") //Message contents
+                .setType(Message.Type.LINK)
+                .build();
+
+        chatView.setOnClickSendButtonListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //new message
+                Message message = new Message.Builder()
+                        .setUser(me)
+                        .setRightMessage(true)
+                        .setMessageText(chatView.getInputText())
+                        .hideIcon(true)
+                        .build();
+                //Set to chat view
+                chatView.send(message);
+                //Reset edit text
+                chatView.setInputText("");
+            }
+        });
+        chatView.send(message1);
+        chatView.receive(message2);
+        chatView.receive(message3);
+        message1.hideIcon(true);
+        message2.hideIcon(true);
+    }*/
+
 }
