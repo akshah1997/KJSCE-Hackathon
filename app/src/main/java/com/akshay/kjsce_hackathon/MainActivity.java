@@ -179,6 +179,8 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         //Set to chat view
         chatView.send(message);
         message.setIconVisibility(false);
+        String S = new String();
+
     }
 
     @Override
