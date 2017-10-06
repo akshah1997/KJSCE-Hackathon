@@ -2,9 +2,11 @@ package com.akshay.kjsce_hackathon;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Toast;
 
 import com.github.bassaer.chatmessageview.models.Message;
 import com.github.bassaer.chatmessageview.models.User;
@@ -21,7 +23,48 @@ public class MainActivity extends AppCompatActivity {
 
         chatView = (ChatView) findViewById(R.id.chat_view);
 
-        // firstTest():
+        int myId = 0;
+//User icon
+        Bitmap myIcon = BitmapFactory.decodeResource(getResources(), R.drawable.face_2);
+//User name
+        String myName = "Akshay";
+
+        int yourId = 1;
+        Bitmap yourIcon = BitmapFactory.decodeResource(getResources(), R.drawable.face_1);
+        String yourName = "Bot";
+
+        final User me = new User(myId, myName, myIcon);
+        final User you = new User(yourId, yourName, yourIcon);
+
+        /*chatView.setBackgroundColor(Color.BLUE);
+        chatView.setEnableSwipeRefresh(true);*/
+        chatView.setOptionIcon(R.drawable.ic_action_mic);
+        chatView.setSendTimeTextColor(Color.WHITE);
+        chatView.setOnClickOptionButtonListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(),"Tits", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        chatView.setOnClickSendButtonListener(new View.OnClickListener() {
+                                                  @Override
+                                                  public void onClick(View view) {
+                                                      //new message
+                                                      Message message = new Message.Builder()
+                                                              .setUser(me)
+                                                              .setRightMessage(true)
+                                                              .setMessageText(chatView.getInputText())
+                                                              .hideIcon(true)
+                                                              .build();
+                                                      //Set to chat view
+                                                      chatView.send(message);
+                                                      //Reset edit text
+                                                      chatView.setInputText("");
+                                                      message.setIconVisibility(false);
+                                                  }
+                                              });
+        // firstTest();
     }
 
     void firstTest() {
