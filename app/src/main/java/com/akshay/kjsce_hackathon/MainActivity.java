@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                         .build();
                 //Set to chat view
                 chatView.send(message);
-                if (msg.contains("what") || msg.contains("how") || msg.contains("when") || msg.contains("where") || msg.contains("who")) {
+                if (msg.contains("what") || msg.contains("What") || msg.contains("how") || msg.contains("How") || msg.contains("when") || msg.contains("When") || msg.contains("where") || msg.contains("Where") || msg.contains("who") || msg.contains("Who")) {
                     try {
                         wolfReq(msg);
                         Log.d("result", msg);
@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                                                           //Set to chat view
                                                           chatView.send(message);
                                                           String msg = chatView.getInputText();
-                                                          if (msg.contains("what") || msg.contains("how") || msg.contains("when") || msg.contains("where") || msg.contains("who")) {
+                                                          if (msg.contains("what") || msg.contains("What") || msg.contains("how") || msg.contains("How") || msg.contains("when") || msg.contains("When") || msg.contains("where") || msg.contains("Where") || msg.contains("who") || msg.contains("Who")) {
                                                               try {
                                                                   wolfReq(msg);
                                                               } catch (Exception e) {
@@ -334,8 +334,8 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
         }
 
-        if (result.getFulfillment().getSpeech().equals("Playing")) {
-            playSong("Stone Age");
+        if (result.getResolvedQuery().equalsIgnoreCase("play")) {
+            playSong("Music");
         }
 
         if (result.getFulfillment().getSpeech().equals("Searching nearby restaurants for food.")) {
