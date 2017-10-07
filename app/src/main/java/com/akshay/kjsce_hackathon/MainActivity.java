@@ -64,11 +64,11 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     private AIDataService aiDataService;
     private static final String CLIENT_ACCESS_TOKEN = "7fb6a25c74834dd3afa68ad0c6146f99";
     static User me, you;
-    private boolean semaphore = true;
+    //private boolean semaphore = true;
     Bitmap bmp;
-    PendingIntent pendingIntent;
+    //PendingIntent pendingIntent;
     AlarmManager am;
-    String givenDateString = "Sat Oct 6 14:57:00 GMT+05:30 2017";
+    //String givenDateString = "Sat Oct 6 14:57:00 GMT+05:30 2017";
     String to = "shubham.dalvi97@gmail.com";
     String subject = "KJSCEHackathon";
     String messageEmail = "Hello World";
@@ -178,21 +178,31 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
         /*chatView.setBackgroundColor(Color.BLUE);
         chatView.setEnableSwipeRefresh(true);*/
+        /*chatView.setLeftBubbleColor(Color.parseColor("#283593"));
+        chatView.setRightBubbleColor(Color.parseColor("#001064"));
+        chatView.setLeftMessageTextColor(Color.WHITE);
+        chatView.setRightBubbleColor(Color.WHITE);
+        //chatView.setBackgroundColor(Color.BLUE);
+        chatView.setSendButtonColor(Color.parseColor("#5f5fc4"));
+        chatView.setSendTimeTextColor(Color.parseColor("#e8eaf6"));
+        chatView.setOptionButtonColor(Color.parseColor("#5f5fc4"));*/
+        chatView.setInputTextHint("Let's talk");
         chatView.setOptionIcon(R.drawable.ic_action_mic);
         chatView.setSendTimeTextColor(Color.WHITE);
+
         chatView.setOnClickOptionButtonListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (semaphore == true) {
+                //if (semaphore == true) {
                     speechRecognizer.startListening(intent);
                     Log.d("a","Recognition Started");
-                    semaphore = false;
-                } else {
+                  //  semaphore = false;
+                /*} else {
                     aiService.stopListening();
                     Log.d("a","Recognition Stopped");
                     //TODO: remove semaphores
                     semaphore = true;
-                }
+                }*/
             }
         });
 
