@@ -412,6 +412,9 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
     public void sendMail(String to, String subject, String message) {
         Intent email = new Intent(Intent.ACTION_SEND);
+        to = to.replaceAll("^\"|\"$","");
+        subject = subject.replaceAll("^\"|\"$","");
+        message = message.replaceAll("^\"|\"$","");
         email.putExtra(Intent.EXTRA_EMAIL, to);
         email.putExtra(Intent.EXTRA_SUBJECT, subject);
         email.putExtra(Intent.EXTRA_TEXT, message);

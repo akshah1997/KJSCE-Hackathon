@@ -11,7 +11,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.widget.ImageButton;
 
 import java.io.IOException;
 
@@ -28,7 +28,7 @@ public class AlarmReceiver extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_alarm_receiver);
-        Button stopAlarm = (Button) findViewById(R.id.stop_alarm);
+        ImageButton stopAlarm = (ImageButton) findViewById(R.id.stop_alarm);
         stopAlarm.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View arg0, MotionEvent arg1) {
                 mMediaPlayer.stop();

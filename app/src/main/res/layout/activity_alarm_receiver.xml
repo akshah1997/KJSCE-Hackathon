@@ -3,11 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.akshay.kjsce_hackathon.AlarmReceiver">
-    <Button
+    tools:context="com.akshay.kjsce_hackathon.AlarmReceiver"
+    android:background="#000000">
+
+    <ImageButton
         android:id="@+id/stop_alarm"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="stop" />
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:background="@drawable/image"
+        android:text="stop"
+        tools:layout_editor_absoluteX="117dp"
+        tools:layout_editor_absoluteY="208dp" />
 
 </android.support.constraint.ConstraintLayout>
