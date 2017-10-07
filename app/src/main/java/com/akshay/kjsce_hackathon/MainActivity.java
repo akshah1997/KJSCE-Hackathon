@@ -134,7 +134,8 @@ public class MainActivity extends AppCompatActivity implements AIListener {
             }
         });
         // setAlarm(givenDateString);
-        //  sendMail(to,subject,message);
+        // sendMail(to,subject,message);
+        // playSong("Tutorials for android");
 
         chatView = (ChatView) findViewById(R.id.chat_view);
         final AIConfiguration config = new AIConfiguration(CLIENT_ACCESS_TOKEN,
@@ -367,7 +368,14 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         email.putExtra(Intent.EXTRA_TEXT, message);
         email.setType("message/rfc822");
         startActivity(Intent.createChooser(email, "Select Email client"));
+    }
 
+    public void playSong(String youtubeLink) {
+        Intent intent = new Intent(Intent.ACTION_SEARCH);
+        intent.setPackage("com.google.android.youtube");
+        intent.putExtra("query", youtubeLink);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
 }
