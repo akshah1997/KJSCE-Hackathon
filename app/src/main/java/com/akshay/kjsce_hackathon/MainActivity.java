@@ -318,6 +318,29 @@ public class MainActivity extends AppCompatActivity implements AIListener {
             setAlarm(time+" "+date);
 
         }
+
+        if (result.getFulfillment().getSpeech().equals("Playing")) {
+            playSong("Stone Age");
+        }
+
+        if (result.getFulfillment().getSpeech().equals("Searching nearby restaurants for food.")) {
+            HashMap<String, JsonElement> resultParameters = result.getParameters();
+            String city = "";
+            String food = "";
+            for (Map.Entry<String, JsonElement> entry : resultParameters.entrySet()) {
+                String key = entry.getKey();
+                JsonElement value = entry.getValue();
+                Log.d("Zomat0",value.toString() );
+                if (value.toString().contains("city")) {
+                    city = value.toString().substring(8,value.toString().length()-1);
+                } else if (value.toString().isEmpty()) {
+                } else {
+                    food = value.toString();
+                }
+            }
+            Log.d("Zomato",city );
+            Log.d("Zomato1",food );
+        }
         /*if (result.getFulfillment().getSpeech().equals("tomail")) {
             to = result.getFulfillment().getSpeech();
         }
