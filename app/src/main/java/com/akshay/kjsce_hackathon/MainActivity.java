@@ -32,10 +32,15 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.gson.JsonElement;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Date;
@@ -338,8 +343,11 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                     food = value.toString();
                 }
             }
+            city = city.replaceAll("^\"|\"$","");
+            String foodie = food.substring(2,food.length()-2);
             Log.d("Zomato",city );
-            Log.d("Zomato1",food );
+            Log.d("Zomato1",foodie );
+            callZomatoAPI(city, foodie);
         }
         /*if (result.getFulfillment().getSpeech().equals("tomail")) {
             to = result.getFulfillment().getSpeech();
@@ -485,6 +493,125 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                 return null;
             }
         }.execute();
+    }
+
+    void callZomatoAPI(final String city, final String food) {
+        class Fetchdata extends AsyncTask<Void , Void , Void>
+        {
+            String mzomatoString;
+            @Override
+            protected Void doInBackground(Void... voids) {
+                HttpURLConnection urlConnection= null;
+                BufferedReader reader = null;
+                String querry = city;
+                int count=2;
+                String cuisine = food;
+                String builtUri="https://developers.zomato.com/api/v2.1/search?q="+querry+"&count="+count+"&cuisines="+cuisine;
+
+                URL url;
+                try{
+                    url = new URL(builtUri.toString());
+                    urlConnection = (HttpURLConnection)url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setRequestProperty("user-key","4c5c8f96b9f943059239fdb47b193c60");
+                    urlConnection.connect();
+                    InputStream inputStream = urlConnection.getInputStream();
+                    StringBuffer buffer = new StringBuffer();
+                    Log.d("finalurl",builtUri);
+                    if(inputStream==null)
+                    {
+                        Toast.makeText(getApplicationContext(),"Something went wrong\nPlease try again later",Toast.LENGTH_LONG).show();
+                        return null;
+                    }
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    String line;
+                    while ((line = reader.readLine())!=null)
+                    {
+                        buffer.append(line+"\n");
+                    }
+                    if(buffer.length()==0)
+                    {
+                        Toast.makeText(getApplicationContext(),"Something went wrong\nPlease try again later",Toast.LENGTH_LONG).show();
+                        return null;
+                    }
+                    mzomatoString=buffer.toString();
+                    JSONObject jsonObject = new JSONObject(mzomatoString);
+                    Log.d("result",jsonObject.toString());
+                    String res = "";
+                    String[] name = new String[2];
+                    String[] address = new String[2];
+                    String[] costForTwo = new String[2];
+                    String[] imagePath = new String[2];
+                    String[] rating = new String[2];
+                    for(int i=0;i<jsonObject.getJSONArray("restaurants").length();i++) {
+                        name[i] = jsonObject.getJSONArray("restaurants").getJSONObject(i).getJSONObject("restaurant").getString("name");
+                        address[i] = jsonObject.getJSONArray("restaurants").getJSONObject(i).getJSONObject("restaurant").getJSONObject("location").getString("address");
+                        costForTwo[i] = jsonObject.getJSONArray("restaurants").getJSONObject(i).getJSONObject("restaurant").getString("average_cost_for_two");
+                        imagePath[i] = jsonObject.getJSONArray("restaurants").getJSONObject(i).getJSONObject("restaurant").getString("photos_url");
+                        rating[i] = jsonObject.getJSONArray("restaurants").getJSONObject(i).getJSONObject("restaurant").getJSONObject("user_rating").getString("rating_text");
+                        //res+=jsonObject.getJSONArray("restaurants").getJSONObject(i).getJSONObject("restaurant").getString("name")+"\n";
+
+                    }
+
+                    Log.d("result12",name[1]+"\n"+address[1]+"\n"+costForTwo[1]+"\n"+imagePath[1]+"\n"+rating[1]);
+
+                    for(int i=0; i<name.length; i++) {
+                        final Message message2 = new Message.Builder()
+                                .setUser(you)
+                                .setRightMessage(false)
+                                .hideIcon(true)
+                                .setMessageText("Name of Restaurant: " + name[i] + "\n\n"
+                                + "Address: " + address[i] + "\n\n" +
+                                "Cost For Two: " + costForTwo[i] + "\n\n" +
+                                "Rating: " + rating[i])
+                                .build();
+                        final Message message1 = new Message.Builder()
+                                .setUser(you)
+                                .setRightMessage(false)
+                                .hideIcon(true)
+                                .setType(Message.Type.LINK)
+                                .setMessageText(imagePath[i])
+                                .build();
+                        //Set to chat view
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                chatView.send(message2);
+                                chatView.send(message1);
+                            }
+                        });
+                    }
+
+                }
+                catch (MalformedURLException e)
+                {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    if(urlConnection!=null)
+                        urlConnection.disconnect();
+                    if(reader!=null)
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+            }
+        }
+        new Fetchdata().execute();
     }
 
 }
