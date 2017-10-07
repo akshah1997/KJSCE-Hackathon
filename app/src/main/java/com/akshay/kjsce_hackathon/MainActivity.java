@@ -24,10 +24,22 @@ import android.widget.Toast;
 import com.github.bassaer.chatmessageview.models.Message;
 import com.github.bassaer.chatmessageview.models.User;
 import com.github.bassaer.chatmessageview.views.ChatView;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.gson.JsonElement;
 
+import org.json.JSONObject;
+
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import ai.api.AIDataService;
@@ -46,9 +58,9 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     private AIService aiService;
     private AIDataService aiDataService;
     private static final String CLIENT_ACCESS_TOKEN = "7fb6a25c74834dd3afa68ad0c6146f99";
-    User me, you;
+    static User me, you;
     private boolean semaphore = true;
-
+    Bitmap bmp;
     PendingIntent pendingIntent;
     AlarmManager am;
     String givenDateString = "Sat Oct 6 14:57:00 GMT+05:30 2017";
@@ -113,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                 chatView.send(message);
                 if (msg.contains("what") || msg.contains("how") || msg.contains("when") || msg.contains("where") || msg.contains("who")) {
                     try {
-                        AndroidUtils.wolfReq(msg);
+                        wolfReq(msg);
                         Log.d("result", msg);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -197,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                                                           String msg = chatView.getInputText();
                                                           if (msg.contains("what") || msg.contains("how") || msg.contains("when") || msg.contains("where") || msg.contains("who")) {
                                                               try {
-                                                                  AndroidUtils.wolfReq(msg);
+                                                                  wolfReq(msg);
                                                               } catch (Exception e) {
                                                                   e.printStackTrace();
                                                               }
@@ -247,10 +259,11 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                     Message message = new Message.Builder()
                             .setUser(you)
                             .setRightMessage(false)
-                            .setMessageText("Query:" + result.getResolvedQuery() +
+                            /*.setMessageText("Query:" + result.getResolvedQuery() +
                                     "\nAction: " + result.getAction() +
                                     "\nParameters: " + parameterString + "\nResolvedQuery: " + result.getResolvedQuery()
-                                    + "\nResult: " + result.getFulfillment().getSpeech())
+                                    + "\nResult: " + result.getFulfillment().getSpeech())*/
+                            .setMessageText(result.getFulfillment().getSpeech())
                             .hideIcon(true)
                             .build();
                     //Set to chat view
@@ -263,11 +276,39 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     void executeCorrespondingTask(Result result) {
-        if (result.getFulfillment().getSpeech().equals("set alarm")) {
-            givenDateString = result.getFulfillment().getSpeech();
+        if (result.getFulfillment().getSpeech().equals("Sending an Email")) {
+            HashMap<String, JsonElement> resultParameters = result.getParameters();
+            for (Map.Entry<String, JsonElement> entry : resultParameters.entrySet()) {
+                String key = entry.getKey();
+                JsonElement value = entry.getValue();
+                if (key.equals("email")) {
+                    to = value.toString();
+                }
+                if (key.equals("message")) {
+                    messageEmail = value.toString();
+                }
+                if (key.equals("subject")) {
+                    subject = value.toString();
+                }
+            }
+            sendMail(to, subject, messageEmail);
+        }
+        if (result.getFulfillment().getSpeech().contains("Setting alarm for")) {
+            HashMap<String, JsonElement> resultParameters = result.getParameters();
+            String date, time;
+            for (Map.Entry<String, JsonElement> entry : resultParameters.entrySet()) {
+                String key = entry.getKey();
+                JsonElement value = entry.getValue();
+                if (key.equals("date")) {
+                    date = value.toString();
+                }
+                if (key.equals("time")) {
+                    time = value.toString();
+                }
+            }
             setAlarm(givenDateString);
         }
-        if (result.getFulfillment().getSpeech().equals("tomail")) {
+        /*if (result.getFulfillment().getSpeech().equals("tomail")) {
             to = result.getFulfillment().getSpeech();
         }
         if (result.getFulfillment().getSpeech().equals("subjectemail")) {
@@ -276,45 +317,12 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         if (result.getFulfillment().getSpeech().equals("messageemail")) {
             messageEmail = result.getFulfillment().getSpeech();
             sendMail(to, subject, messageEmail);
-        }
+        }*/
     }
 
     @Override
     public void onResult(ai.api.model.AIResponse response) {
-        /*Result result = response.getResult();
 
-        // Get parameters
-        String parameterString = "";
-        if (result.getParameters() != null && !result.getParameters().isEmpty()) {
-            for (final Map.Entry<String, JsonElement> entry : result.getParameters().entrySet()) {
-                parameterString += "(" + entry.getKey() + ", " + entry.getValue() + ") ";
-            }
-        }
-
-        Message msg = new Message.Builder()
-                .setUser(me)
-                .setRightMessage(true)
-                .setMessageText(result.getResolvedQuery())
-                .hideIcon(true)
-                .build();
-        //Set to chat view
-        chatView.send(msg);
-        //Reset edit text
-        chatView.setInputText("");
-        msg.setIconVisibility(false);
-
-        Message message = new Message.Builder()
-                .setUser(you)
-                .setRightMessage(false)
-                .setMessageText("Query:" + result.getResolvedQuery() +
-                        "\nAction: " + result.getAction() +
-                        "\nParameters: " + parameterString + "\nResolvedQuery: " + result.getResolvedQuery()
-                        + "\nResult: " + result.getFulfillment().getSpeech())
-                .hideIcon(true)
-                .build();
-        //Set to chat view
-        chatView.send(message);
-        message.setIconVisibility(false);*/
     }
 
     @Override
@@ -376,6 +384,74 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         intent.putExtra("query", youtubeLink);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+    }
+
+    public void wolfReq(String s)throws Exception
+    {
+        String appid="JHG2AQ-KEUPARWGKH";
+        HttpTransport httpTransport = new NetHttpTransport();
+        HttpRequestFactory requestFactory =
+                httpTransport.createRequestFactory();
+        GenericUrl url1 = new
+                GenericUrl("http://api.wolframalpha.com/v2/query");
+        url1.put("input",s);
+        url1.put("output","JSON");
+        url1.put("appid",appid);
+        final HttpRequest request = requestFactory.buildGetRequest(url1);
+
+        new AsyncTask<Void, Void, String>() {
+            @Override
+            protected String doInBackground(Void... params) {
+                HttpResponse httpResponse = null;
+
+                try {
+                    httpResponse = request.execute();
+                    InputStream inputStream = httpResponse.getContent();
+                    int ch;
+                    String result = "";
+                    while ((ch = inputStream.read()) != -1) {
+                        result+=(char)ch;
+                    }
+
+                    httpResponse.disconnect();
+                    JSONObject data = new JSONObject(result);
+                    result = data.getJSONObject("queryresult").getJSONArray("pods").getJSONObject(1).getJSONArray("subpods").getJSONObject(0).getJSONObject("img").getString ("src");
+                    URL urlConnection = new URL(result);
+                    HttpURLConnection connection =
+                            (HttpURLConnection) urlConnection
+                                    .openConnection();
+                    connection.setDoInput(true);
+                    connection.setConnectTimeout(20000);
+                    connection.connect();
+                    InputStream input =
+                            connection.getInputStream();
+                    Bitmap myBitmap =
+                            BitmapFactory.decodeStream(input);
+                    bmp=myBitmap;
+                    connection.disconnect();
+                    Log.d("result",bmp.toString());
+
+                    final Message message2 = new Message.Builder()
+                            .setUser(you)
+                            .setRightMessage(false)
+                            .setPicture(myBitmap)
+                            .hideIcon(true)
+                            .setType(Message.Type.PICTURE)
+                            .build();
+                    //Set to chat view
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            chatView.send(message2);
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+        }.execute();
     }
 
 }

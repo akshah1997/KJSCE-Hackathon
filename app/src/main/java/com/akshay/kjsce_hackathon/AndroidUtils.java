@@ -13,6 +13,8 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -22,9 +24,9 @@ import java.io.InputStream;
 
 
 public class AndroidUtils {
+    static String result1;
     public static void wolfReq(String s)throws Exception
     {
-
         String appid="JHG2AQ-KEUPARWGKH";
         HttpTransport httpTransport = new NetHttpTransport();
         HttpRequestFactory requestFactory =
@@ -35,9 +37,10 @@ public class AndroidUtils {
         url1.put("output","JSON");
         url1.put("appid",appid);
         final HttpRequest request = requestFactory.buildGetRequest(url1);
-        new AsyncTask<Void, Void, Void>() {
+        String resultPassed = "";
+        new AsyncTask<Void, Void, String>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected String doInBackground(Void... params) {
                 HttpResponse httpResponse = null;
 
                 try {
@@ -50,14 +53,21 @@ public class AndroidUtils {
                     }
 
                     httpResponse.disconnect();
-                    Log.d("abc",result);
-                } catch (IOException e) {
+                    JSONObject data = new JSONObject(result);
+                    result = data.getJSONObject("queryresult").getJSONArray("pods").getJSONObject(1).getJSONArray("subpods").getJSONObject(0).getString("plaintext");
+                    Log.d("result",result);
+                    setResult(result);
+                    return result;
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
                 return null;
             }
         }.execute();
+    }
 
+    static void setResult(String res) {
+        result1 = res;
     }
 }
