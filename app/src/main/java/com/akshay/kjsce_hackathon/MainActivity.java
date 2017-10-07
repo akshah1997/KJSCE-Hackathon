@@ -293,9 +293,10 @@ public class MainActivity extends AppCompatActivity implements AIListener {
             }
             sendMail(to, subject, messageEmail);
         }
+
         if (result.getFulfillment().getSpeech().contains("Setting alarm for")) {
             HashMap<String, JsonElement> resultParameters = result.getParameters();
-            String date, time;
+            String date="\"abc\"", time="\"abc\"";
             for (Map.Entry<String, JsonElement> entry : resultParameters.entrySet()) {
                 String key = entry.getKey();
                 JsonElement value = entry.getValue();
@@ -306,7 +307,16 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                     time = value.toString();
                 }
             }
-            setAlarm(givenDateString);
+            Log.d("testing0",time+date);
+            Log.d("ER","heloo");
+            time=time.replaceAll("^\"|\"$","");
+
+            date=date.replaceAll("^\"|\"$","");
+            Log.d("Testing1",time);
+            Log.d("Testing2",date);
+            Log.d("Testing3",time+" "+date);
+            setAlarm(time+" "+date);
+
         }
         /*if (result.getFulfillment().getSpeech().equals("tomail")) {
             to = result.getFulfillment().getSpeech();
@@ -352,7 +362,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void setAlarm(String givenDateString) {
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
         Date mDate = null;
         try {
             mDate = sdf.parse(givenDateString);
