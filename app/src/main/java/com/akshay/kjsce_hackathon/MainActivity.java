@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Date;
@@ -200,7 +199,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                 /*} else {
                     aiService.stopListening();
                     Log.d("a","Recognition Stopped");
-                    //TODO: remove semaphores
+
                     semaphore = true;
                 }*/
             }
@@ -250,9 +249,9 @@ public class MainActivity extends AppCompatActivity implements AIListener {
             protected AIResponse doInBackground(AIRequest... requests) {
                 final AIRequest request = requests[0];
                 try {
-                    final AIResponse response = aiDataService.request(aiRequest);
-                    return response;
+                    return aiDataService.request(aiRequest);
                 } catch (AIServiceException e) {
+                    Log.e("Response Error", e.getMessage());
                 }
                 return null;
             }
@@ -348,8 +347,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                 Log.d("Zomat0",value.toString() );
                 if (value.toString().contains("city")) {
                     city = value.toString().substring(8,value.toString().length()-1);
-                } else if (value.toString().isEmpty()) {
-                } else {
+                } else if (!value.toString().isEmpty()) {
                     food = value.toString();
                 }
             }
@@ -415,6 +413,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 12345, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         am = (AlarmManager) getSystemService(Activity.ALARM_SERVICE);
+        assert mDate != null;
         am.set(AlarmManager.RTC_WAKEUP, mDate.getTime(),
                 pendingIntent);
 
@@ -456,7 +455,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         new AsyncTask<Void, Void, String>() {
             @Override
             protected String doInBackground(Void... params) {
-                HttpResponse httpResponse = null;
+                HttpResponse httpResponse;
 
                 try {
                     httpResponse = request.execute();
@@ -511,25 +510,23 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     void callZomatoAPI(final String city, final String food) {
         class Fetchdata extends AsyncTask<Void , Void , Void>
         {
-            String mzomatoString;
+            private String mzomatoString;
             @Override
             protected Void doInBackground(Void... voids) {
                 HttpURLConnection urlConnection= null;
                 BufferedReader reader = null;
-                String querry = city;
                 int count=2;
-                String cuisine = food;
-                String builtUri="https://developers.zomato.com/api/v2.1/search?q="+querry+"&count="+count+"&cuisines="+cuisine;
+                String builtUri="https://developers.zomato.com/api/v2.1/search?q="+city+"&count="+count+"&cuisines="+food;
 
                 URL url;
                 try{
-                    url = new URL(builtUri.toString());
+                    url = new URL(builtUri);
                     urlConnection = (HttpURLConnection)url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.setRequestProperty("user-key","4c5c8f96b9f943059239fdb47b193c60");
                     urlConnection.connect();
                     InputStream inputStream = urlConnection.getInputStream();
-                    StringBuffer buffer = new StringBuffer();
+                    StringBuilder buffer = new StringBuilder();
                     Log.d("finalurl",builtUri);
                     if(inputStream==null)
                     {
@@ -540,7 +537,8 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                     String line;
                     while ((line = reader.readLine())!=null)
                     {
-                        buffer.append(line+"\n");
+                        buffer.append(line);
+                        buffer.append("\n");
                     }
                     if(buffer.length()==0)
                     {
@@ -595,25 +593,18 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                         });
                     }
 
-                }
-                catch (MalformedURLException e)
-                {
+                } catch (IOException | JSONException e) {
                     e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                finally
-                {
+                } finally {
                     if(urlConnection!=null)
                         urlConnection.disconnect();
-                    if(reader!=null)
+                    if(reader!=null) {
                         try {
                             reader.close();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                    }
                 }
 
                 return null;
