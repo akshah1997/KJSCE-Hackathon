@@ -24,18 +24,17 @@ import java.io.InputStream;
 
 
 public class AndroidUtils {
-    static String result1;
-    public static void wolfReq(String s)throws Exception
-    {
-        String appid="JHG2AQ-KEUPARWGKH";
+
+    public static void wolfReq(String s) throws Exception {
+        String appid = "JHG2AQ-KEUPARWGKH";
         HttpTransport httpTransport = new NetHttpTransport();
         HttpRequestFactory requestFactory =
                 httpTransport.createRequestFactory();
         GenericUrl url1 = new
                 GenericUrl("http://api.wolframalpha.com/v2/query");
-    url1.put("input",s);
-        url1.put("output","JSON");
-        url1.put("appid",appid);
+        url1.put("input", s);
+        url1.put("output", "JSON");
+        url1.put("appid", appid);
         final HttpRequest request = requestFactory.buildGetRequest(url1);
         String resultPassed = "";
         new AsyncTask<Void, Void, String>() {
@@ -47,17 +46,17 @@ public class AndroidUtils {
                     httpResponse = request.execute();
                     InputStream inputStream = httpResponse.getContent();
                     int ch;
-                    String result = "";
+                    StringBuilder result = new StringBuilder();
+
                     while ((ch = inputStream.read()) != -1) {
-                        result+=(char)ch;
+                        result.append((char) ch);
                     }
 
                     httpResponse.disconnect();
-                    JSONObject data = new JSONObject(result);
-                    result = data.getJSONObject("queryresult").getJSONArray("pods").getJSONObject(1).getJSONArray("subpods").getJSONObject(0).getString("plaintext");
-                    Log.d("result",result);
-                    setResult(result);
-                    return result;
+                    JSONObject data = new JSONObject(result.toString());
+                    result = new StringBuilder(data.getJSONObject("queryresult").getJSONArray("pods").getJSONObject(1).getJSONArray("subpods").getJSONObject(0).getString("plaintext"));
+                    Log.d("result", result.toString());
+                    return result.toString();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -65,9 +64,5 @@ public class AndroidUtils {
                 return null;
             }
         }.execute();
-    }
-
-    static void setResult(String res) {
-        result1 = res;
     }
 }
